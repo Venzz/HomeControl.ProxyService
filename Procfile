@@ -1,0 +1,1 @@
+web: java -jar target/homecontrol-proxyservice-1.0-jar-with-dependencies.jar
