@@ -1,14 +1,30 @@
 package data.camera.indoor;
 
 import data.ServiceSocket;
+import org.eclipse.jetty.websocket.api.RemoteEndpoint;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.WebSocketAdapter;
 import service.Service;
+
+import java.nio.ByteBuffer;
 
 public class IndoorCameraServiceSocket extends WebSocketAdapter implements ServiceSocket {
     public IndoorCameraServiceSocket() {
         Service.indoorCamera.set(this);
         System.out.println("Indoor CameraProxy Service => Created.");
+    }
+
+    @Override
+    public void send(byte[] data) {
+        try {
+            if (isNotConnected()) {
+                return;
+            }
+            RemoteEndpoint endpoint = getRemote();
+            endpoint.sendBytes(ByteBuffer.wrap(data));
+        } catch (Exception e) {
+            e.printStackTrace(System.out);
+        }
     }
 
     @Override
