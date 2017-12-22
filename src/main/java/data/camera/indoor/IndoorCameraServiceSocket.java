@@ -1,11 +1,13 @@
 package data.camera.indoor;
 
+import data.ServiceSocket;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.WebSocketAdapter;
 import service.Service;
 
-public class IndoorCameraServiceSocket extends WebSocketAdapter {
+public class IndoorCameraServiceSocket extends WebSocketAdapter implements ServiceSocket {
     public IndoorCameraServiceSocket() {
+        Service.indoorCamera.set(this);
         System.out.println("Indoor CameraProxy Service => Created.");
     }
 

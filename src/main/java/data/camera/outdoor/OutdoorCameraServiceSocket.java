@@ -1,12 +1,30 @@
 package data.camera.outdoor;
 
+import data.ServiceSocket;
+import org.eclipse.jetty.websocket.api.RemoteEndpoint;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.WebSocketAdapter;
 import service.Service;
 
-public class OutdoorCameraServiceSocket extends WebSocketAdapter {
+import java.nio.ByteBuffer;
+
+public class OutdoorCameraServiceSocket extends WebSocketAdapter implements ServiceSocket {
     public OutdoorCameraServiceSocket() {
+        Service.outdoorCamera.set(this);
         System.out.println("Outdoor CameraProxy Service => Created.");
+    }
+
+    @Override
+    public void send(byte[] data) {
+        try {
+            if (isNotConnected()) {
+                return;
+            }
+            RemoteEndpoint endpoint = getRemote();
+            endpoint.sendBytes(ByteBuffer.wrap(data));
+        } catch (Exception e) {
+            e.printStackTrace(System.out);
+        }
     }
 
     @Override
