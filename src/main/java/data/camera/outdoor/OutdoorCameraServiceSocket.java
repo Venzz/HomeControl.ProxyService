@@ -1,6 +1,7 @@
 package data.camera.outdoor;
 
 import data.ServiceSocket;
+import logging.Log;
 import org.eclipse.jetty.websocket.api.RemoteEndpoint;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.WebSocketAdapter;
@@ -9,6 +10,8 @@ import service.Service;
 import java.nio.ByteBuffer;
 
 public class OutdoorCameraServiceSocket extends WebSocketAdapter implements ServiceSocket {
+    private Log log = new Log("Outdoor CameraProxy Service");
+
     public OutdoorCameraServiceSocket() {
         Service.outdoorCamera.set(this);
         System.out.println("Outdoor CameraProxy Service => Created.");
@@ -36,7 +39,7 @@ public class OutdoorCameraServiceSocket extends WebSocketAdapter implements Serv
     @Override
     public void onWebSocketBinary(byte[] payload, int offset, int len) {
         super.onWebSocketBinary(payload, offset, len);
-        System.out.println("Outdoor CameraProxy Service => " + payload.length + " bytes.");
+        log.logData(payload);
         Service.outdoorCamera.send(payload);
     }
 
