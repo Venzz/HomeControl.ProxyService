@@ -14,7 +14,7 @@ public class Log {
 
     public void logData(byte[] data) {
         accumulatedDataSinceLastLogging += data.length;
-        if (ChronoUnit.SECONDS.between(LocalDateTime.now(), lastDataLoggingDate) > 1) {
+        if (ChronoUnit.SECONDS.between(lastDataLoggingDate, LocalDateTime.now()) > 1) {
             System.out.println(title + " => " + accumulatedDataSinceLastLogging + " bytes.");
             accumulatedDataSinceLastLogging = 0;
         }
