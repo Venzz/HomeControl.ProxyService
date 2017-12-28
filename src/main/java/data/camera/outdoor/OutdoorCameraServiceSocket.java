@@ -1,12 +1,33 @@
 package data.camera.outdoor;
 
+import data.ServiceSocket;
+import logging.Log;
+import org.eclipse.jetty.websocket.api.RemoteEndpoint;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.WebSocketAdapter;
 import service.Service;
 
-public class OutdoorCameraServiceSocket extends WebSocketAdapter {
+import java.nio.ByteBuffer;
+
+public class OutdoorCameraServiceSocket extends WebSocketAdapter implements ServiceSocket {
+    private Log log = new Log("Outdoor CameraProxy Service");
+
     public OutdoorCameraServiceSocket() {
+        Service.outdoorCamera.set(this);
         System.out.println("Outdoor CameraProxy Service => Created.");
+    }
+
+    @Override
+    public void send(byte[] data) {
+        try {
+            if (isNotConnected()) {
+                return;
+            }
+            RemoteEndpoint endpoint = getRemote();
+            endpoint.sendBytes(ByteBuffer.wrap(data));
+        } catch (Exception e) {
+            e.printStackTrace(System.out);
+        }
     }
 
     @Override
@@ -18,7 +39,7 @@ public class OutdoorCameraServiceSocket extends WebSocketAdapter {
     @Override
     public void onWebSocketBinary(byte[] payload, int offset, int len) {
         super.onWebSocketBinary(payload, offset, len);
-        System.out.println("Outdoor CameraProxy Service => " + payload.length + " bytes.");
+        log.logData(payload);
         Service.outdoorCamera.send(payload);
     }
 

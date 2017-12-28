@@ -5,10 +5,15 @@ import org.eclipse.jetty.websocket.api.RemoteEndpoint;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.WebSocketAdapter;
 import service.Service;
+import data.CommandPerformer;
 
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.List;
 
 public class OutdoorCameraClientSocket extends WebSocketAdapter implements ClientSocket {
+    private List<CommandPerformer> performers = new ArrayList<CommandPerformer>();
+
     public OutdoorCameraClientSocket() {
         Service.outdoorCamera.add(this);
         System.out.println("Outdoor CameraProxy Client => Created.");
@@ -18,6 +23,16 @@ public class OutdoorCameraClientSocket extends WebSocketAdapter implements Clien
     public void onWebSocketConnect(Session session) {
         super.onWebSocketConnect(session);
         System.out.println("Outdoor CameraProxy Client => Connected.");
+    }
+
+    @Override
+    public synchronized void addPerformer(CommandPerformer performer) {
+        performers.add(performer);
+    }
+
+    @Override
+    public void removePerformer(CommandPerformer performer) {
+        performers.remove(performer);
     }
 
     public void send(byte[] data) {
@@ -33,8 +48,11 @@ public class OutdoorCameraClientSocket extends WebSocketAdapter implements Clien
     }
 
     @Override
-    public void onWebSocketBinary(byte[] payload, int offset, int len) {
+    public synchronized void onWebSocketBinary(byte[] payload, int offset, int len) {
         super.onWebSocketBinary(payload, offset, len);
+        for (CommandPerformer performer : performers) {
+            performer.send(payload);
+        }
     }
 
     @Override

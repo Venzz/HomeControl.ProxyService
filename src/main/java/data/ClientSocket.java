@@ -1,5 +1,5 @@
 package data;
 
-public interface ClientSocket {
+public interface ClientSocket extends CommandReceiver {
     void send(byte[] data);
 }

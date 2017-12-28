@@ -1,14 +1,19 @@
 package data.camera.indoor;
 
 import data.ClientSocket;
+import data.CommandPerformer;
 import org.eclipse.jetty.websocket.api.RemoteEndpoint;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.WebSocketAdapter;
 import service.Service;
 
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.List;
 
 public class IndoorCameraClientSocket extends WebSocketAdapter implements ClientSocket {
+    private List<CommandPerformer> performers = new ArrayList<CommandPerformer>();
+
     public IndoorCameraClientSocket() {
         Service.indoorCamera.add(this);
         System.out.println("Indoor CameraProxy Client => Created.");
@@ -18,6 +23,16 @@ public class IndoorCameraClientSocket extends WebSocketAdapter implements Client
     public void onWebSocketConnect(Session session) {
         super.onWebSocketConnect(session);
         System.out.println("Indoor CameraProxy Client => Connected.");
+    }
+
+    @Override
+    public synchronized void addPerformer(CommandPerformer performer) {
+        performers.add(performer);
+    }
+
+    @Override
+    public void removePerformer(CommandPerformer performer) {
+        performers.remove(performer);
     }
 
     public void send(byte[] data) {
