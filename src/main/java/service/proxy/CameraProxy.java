@@ -11,6 +11,11 @@ public class CameraProxy {
     private Set<ClientSocket> clients = new HashSet<ClientSocket>();
 
     public synchronized void set(ServiceSocket service) {
+        if (this.service != null) {
+            for (ClientSocket client : clients) {
+                client.removePerformer(service);
+            }
+        }
         this.service = service;
         for (ClientSocket client : clients) {
             client.addPerformer(service);

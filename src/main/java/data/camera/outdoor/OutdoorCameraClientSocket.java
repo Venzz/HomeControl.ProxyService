@@ -25,8 +25,14 @@ public class OutdoorCameraClientSocket extends WebSocketAdapter implements Clien
         System.out.println("Outdoor CameraProxy Client => Connected.");
     }
 
+    @Override
     public synchronized void addPerformer(CommandPerformer performer) {
         performers.add(performer);
+    }
+
+    @Override
+    public void removePerformer(CommandPerformer performer) {
+        performers.remove(performer);
     }
 
     public void send(byte[] data) {
