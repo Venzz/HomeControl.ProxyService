@@ -1,23 +1,26 @@
-package data.camera.outdoor;
+package proxyservice.servlets;
 
-import data.ServiceSocket;
-import logging.Log;
+import proxyservice.App;
+import proxyservice.model.cameradata.CameraDataProvider;
 import org.eclipse.jetty.websocket.api.RemoteEndpoint;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.WebSocketAdapter;
-import service.Service;
+import proxyservice.model.cameradata.CameraDataProviderEventListener;
 
 import java.nio.ByteBuffer;
 
-public class OutdoorCameraServiceSocket extends WebSocketAdapter implements ServiceSocket {
-    private Log log = new Log("Outdoor CameraProxy Service");
+public class CameraDataProviderSocket extends WebSocketAdapter implements CameraDataProvider {
+    private CameraDataProviderEventListener eventListener;
 
-    public OutdoorCameraServiceSocket() {
-        Service.outdoorCamera.set(this);
-        System.out.println("Outdoor CameraProxy Service => Created.");
+    public CameraDataProviderSocket() {
+        App.model.cameraProxy.setProvider(this);
+        App.logger.log("CameraProxy Service", "Created.");
     }
 
-    @Override
+    public synchronized void setEventListener(CameraDataProviderEventListener eventListener) {
+        this.eventListener = eventListener;
+    }
+
     public void send(byte[] data) {
         try {
             if (isNotConnected()) {
@@ -33,20 +36,22 @@ public class OutdoorCameraServiceSocket extends WebSocketAdapter implements Serv
     @Override
     public void onWebSocketConnect(Session session) {
         super.onWebSocketConnect(session);
-        System.out.println("Outdoor CameraProxy Service => Connected.");
+        App.logger.log("CameraProxy Service", "Connected.");
     }
 
     @Override
     public void onWebSocketBinary(byte[] payload, int offset, int len) {
         super.onWebSocketBinary(payload, offset, len);
-        log.logData(payload);
-        Service.outdoorCamera.send(payload);
+        if (eventListener != null) {
+            eventListener.onProviderDataReceived(payload);
+        }
+        App.logger.log("CameraProxy Service", payload);
     }
 
     @Override
     public void onWebSocketClose(int statusCode, String reason) {
         super.onWebSocketClose(statusCode,reason);
-        System.out.println("Outdoor CameraProxy Service => Closed (" + statusCode + ", " + reason + ")");
+        App.logger.log("CameraProxy Service", "Closed (" + statusCode + ", " + reason + ")");
     }
 
     @Override

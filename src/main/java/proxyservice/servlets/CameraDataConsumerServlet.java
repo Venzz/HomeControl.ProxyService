@@ -1,4 +1,4 @@
-package data.camera.outdoor;
+package proxyservice.servlets;
 
 import org.eclipse.jetty.websocket.servlet.WebSocketServlet;
 import org.eclipse.jetty.websocket.servlet.WebSocketServletFactory;
@@ -6,9 +6,9 @@ import org.eclipse.jetty.websocket.servlet.WebSocketServletFactory;
 import javax.servlet.annotation.WebServlet;
 
 @SuppressWarnings("serial")
-@WebServlet(name = "Outdoor CameraProxy Service", urlPatterns = { "/outdoor-service/*" })
-public class OutdoorCameraServiceServlet extends WebSocketServlet {
-    public OutdoorCameraServiceServlet() {
+@WebServlet(name = "Data Consumer", urlPatterns = { "/client/*" })
+public class CameraDataConsumerServlet extends WebSocketServlet {
+    public CameraDataConsumerServlet() {
     }
 
     @Override
@@ -16,6 +16,6 @@ public class OutdoorCameraServiceServlet extends WebSocketServlet {
         factory.getPolicy().setIdleTimeout(60000);
         factory.getPolicy().setMaxBinaryMessageBufferSize(1024 * 1024);
         factory.getPolicy().setMaxBinaryMessageSize(1024 * 1024);
-        factory.register(OutdoorCameraServiceSocket.class);
+        factory.register(CameraDataConsumerSocket.class);
     }
 }

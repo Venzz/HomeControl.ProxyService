@@ -47,7 +47,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>Bootstrapper</mainClass>
+                            <mainClass>proxyservice.App</mainClass>
                         </manifest>
                     </archive>
                     <descriptorRefs>

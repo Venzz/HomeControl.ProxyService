@@ -1,18 +1,20 @@
-package logging;
+package proxyservice.logging;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 
-public class Log {
-    private String title;
+public class Logger {
     private LocalDateTime lastDataLoggingDate = LocalDateTime.now();
     private int accumulatedDataSinceLastLogging = 0;
 
-    public Log(String title) {
-        this.title = title;
+    public Logger() {
     }
 
-    public void logData(byte[] data) {
+    public void log(String title, String message) {
+        System.out.println(title + " => " + message);
+    }
+
+    public void log(String title, byte[] data) {
         accumulatedDataSinceLastLogging += data.length;
         if (ChronoUnit.SECONDS.between(lastDataLoggingDate, LocalDateTime.now()) > 1) {
             System.out.println(title + " => " + accumulatedDataSinceLastLogging + " bytes.");
