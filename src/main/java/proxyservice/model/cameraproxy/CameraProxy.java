@@ -30,6 +30,11 @@ public class CameraProxy implements CameraDataProviderEventListener, CameraDataC
         if (provider == null) {
             return;
         }
+
+        data[4] = (byte)id;
+        data[5] = (byte)(id >> 8);
+        data[6] = (byte)(id >> 16);
+        data[7] = (byte)(id >> 24);
         provider.send(data);
     }
 
