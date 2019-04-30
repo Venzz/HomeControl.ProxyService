@@ -16,7 +16,7 @@ public class CameraDataConsumerSocket extends WebSocketAdapter implements Camera
 
     public CameraDataConsumerSocket() {
         App.model.cameraProxy.addConsumer(this);
-        App.logger.log("CameraProxy Client", "Created.");
+        App.logger.log("CameraProxy Client: " + id, "Created.");
     }
 
     public synchronized void setEventListener(CameraDataConsumerEventListener eventListener) {
@@ -38,7 +38,7 @@ public class CameraDataConsumerSocket extends WebSocketAdapter implements Camera
     @Override
     public void onWebSocketConnect(Session session) {
         super.onWebSocketConnect(session);
-        App.logger.log("CameraProxy Client", "Connected.");
+        App.logger.log("CameraProxy Client: " + id, "Connected.");
     }
 
     @Override
@@ -53,7 +53,7 @@ public class CameraDataConsumerSocket extends WebSocketAdapter implements Camera
     public void onWebSocketClose(int statusCode, String reason) {
         super.onWebSocketClose(statusCode,reason);
         App.model.cameraProxy.removeConsumer(this);
-        App.logger.log("CameraProxy Client", "Closed (" + statusCode + ", " + reason + ")");
+        App.logger.log("CameraProxy Client: " + id, "Closed (" + statusCode + ", " + reason + ")");
     }
 
     @Override
