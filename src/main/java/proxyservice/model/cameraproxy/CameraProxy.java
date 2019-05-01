@@ -8,6 +8,7 @@ import proxyservice.model.messages.Message;
 import proxyservice.model.messages.standard.StandardMessage;
 
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -34,7 +35,7 @@ public class CameraProxy implements CameraDataProviderEventListener, CameraDataC
             return;
         }
 
-        ByteBuffer dataBuffer = ByteBuffer.wrap(data);
+        ByteBuffer dataBuffer = ByteBuffer.wrap(data).order(ByteOrder.LITTLE_ENDIAN);
         dataBuffer.putInt(4, consumerId);
 
         provider.send(data);

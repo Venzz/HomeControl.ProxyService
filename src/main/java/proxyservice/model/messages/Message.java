@@ -3,6 +3,7 @@ package proxyservice.model.messages;
 import proxyservice.model.messages.standard.StandardMessage;
 
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 
 public class Message {
     protected Message() {
@@ -13,7 +14,7 @@ public class Message {
             return null;
         }
 
-        ByteBuffer dataBuffer = ByteBuffer.wrap(data);
+        ByteBuffer dataBuffer = ByteBuffer.wrap(data).order(ByteOrder.LITTLE_ENDIAN);
         int header = dataBuffer.getInt(0);
         if (header == 0xFFFFFFFE) {
             int consumerId = dataBuffer.getInt(4);
