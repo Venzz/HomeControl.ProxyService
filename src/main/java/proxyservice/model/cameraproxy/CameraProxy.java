@@ -4,13 +4,16 @@ import proxyservice.model.cameradata.CameraDataConsumer;
 import proxyservice.model.cameradata.CameraDataConsumerEventListener;
 import proxyservice.model.cameradata.CameraDataProvider;
 import proxyservice.model.cameradata.CameraDataProviderEventListener;
+import proxyservice.model.messages.Message;
+import proxyservice.model.messages.standard.StandardMessage;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.nio.ByteBuffer;
+import java.util.HashMap;
+import java.util.Map;
 
 public class CameraProxy implements CameraDataProviderEventListener, CameraDataConsumerEventListener {
     private CameraDataProvider provider;
-    private Set<CameraDataConsumer> consumers = new HashSet<CameraDataConsumer>();
+    private Map<Integer, CameraDataConsumer> consumers = new HashMap<Integer, CameraDataConsumer>();
 
     public synchronized void setProvider(CameraDataProvider provider) {
         this.provider = provider;
@@ -18,29 +21,36 @@ public class CameraProxy implements CameraDataProviderEventListener, CameraDataC
     }
 
     public synchronized void addConsumer(CameraDataConsumer consumer) {
-        consumers.add(consumer);
+        consumers.put(consumer.getId(), consumer);
         consumer.setEventListener(this);
     }
 
     public synchronized void removeConsumer(CameraDataConsumer consumer) {
-        consumers.remove(consumer);
+        consumers.remove(consumer.getId());
     }
 
-    public synchronized void onConsumerDataReceived(int id, byte[] data) {
+    public synchronized void onConsumerDataReceived(int consumerId, byte[] data) {
         if (provider == null) {
             return;
         }
 
-        data[4] = (byte)id;
-        data[5] = (byte)(id >> 8);
-        data[6] = (byte)(id >> 16);
-        data[7] = (byte)(id >> 24);
+        ByteBuffer dataBuffer = ByteBuffer.wrap(data);
+        dataBuffer.putInt(4, consumerId);
+
         provider.send(data);
     }
 
     public synchronized void onProviderDataReceived(byte[] data) {
-        for (CameraDataConsumer consumer : consumers) {
-            consumer.send(data);
+        Message message = Message.tryCreate(data);
+        if (message instanceof StandardMessage) {
+            StandardMessage standardMessage = (StandardMessage)message;
+            if (consumers.containsKey(standardMessage.getConsumerId())) {
+                consumers.get(standardMessage.getConsumerId()).send(data);
+            }
+        } else {
+            for (CameraDataConsumer consumer : consumers.values()) {
+                consumer.send(data);
+            }
         }
     }
 }

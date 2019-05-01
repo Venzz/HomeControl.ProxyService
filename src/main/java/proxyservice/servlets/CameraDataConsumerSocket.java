@@ -19,6 +19,10 @@ public class CameraDataConsumerSocket extends WebSocketAdapter implements Camera
         App.logger.log("CameraProxy Client: " + id, "Created.");
     }
 
+    public int getId() {
+        return id;
+    }
+
     public synchronized void setEventListener(CameraDataConsumerEventListener eventListener) {
         this.eventListener = eventListener;
     }
