@@ -44,8 +44,13 @@ public class CameraProxy implements CameraDataProviderEventListener, CameraDataC
         Message message = Message.tryCreate(data);
         if (message instanceof StandardMessage) {
             StandardMessage standardMessage = (StandardMessage)message;
-            if (consumers.containsKey(standardMessage.getConsumerId())) {
-                consumers.get(standardMessage.getConsumerId()).send(data);
+            int consumerId = standardMessage.getConsumerId();
+            if (consumerId == 0) {
+                for (CameraDataConsumer consumer : consumers.values()) {
+                    consumer.send(data);
+                }
+            } else if (consumers.containsKey(consumerId)) {
+                consumers.get(consumerId).send(data);
             }
         } else {
             for (CameraDataConsumer consumer : consumers.values()) {
