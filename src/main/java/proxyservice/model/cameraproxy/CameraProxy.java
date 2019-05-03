@@ -1,20 +1,25 @@
 package proxyservice.model.cameraproxy;
 
+import proxyservice.App;
 import proxyservice.model.cameradata.CameraDataConsumer;
 import proxyservice.model.cameradata.CameraDataConsumerEventListener;
 import proxyservice.model.cameradata.CameraDataProvider;
 import proxyservice.model.cameradata.CameraDataProviderEventListener;
 import proxyservice.model.messages.Message;
+import proxyservice.model.messages.service.PushChannelUriMessage;
 import proxyservice.model.messages.standard.StandardMessage;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class CameraProxy implements CameraDataProviderEventListener, CameraDataConsumerEventListener {
     private CameraDataProvider provider;
     private Map<Integer, CameraDataConsumer> consumers = new HashMap<Integer, CameraDataConsumer>();
+    private List<String> pushChannels = new ArrayList<String>();
 
     public synchronized void setProvider(CameraDataProvider provider) {
         this.provider = provider;
@@ -31,14 +36,16 @@ public class CameraProxy implements CameraDataProviderEventListener, CameraDataC
     }
 
     public synchronized void onConsumerDataReceived(int consumerId, byte[] data) {
-        if (provider == null) {
-            return;
+        Message message = Message.tryCreate(data);
+        if (message instanceof PushChannelUriMessage) {
+            PushChannelUriMessage pushChannelUriMessage = (PushChannelUriMessage)message;
+            pushChannels.remove(pushChannelUriMessage.getPreviousUri());
+            pushChannels.add(pushChannelUriMessage.getUri());
+            App.logger.log("PushChannelUriMessage", "Previous: " + pushChannelUriMessage.getPreviousUri() + ", New: " + pushChannelUriMessage.getUri());
+        } else if (provider != null) {
+            ByteBuffer.wrap(data).order(ByteOrder.LITTLE_ENDIAN).putInt(4, consumerId);
+            provider.send(data);
         }
-
-        ByteBuffer dataBuffer = ByteBuffer.wrap(data).order(ByteOrder.LITTLE_ENDIAN);
-        dataBuffer.putInt(4, consumerId);
-
-        provider.send(data);
     }
 
     public synchronized void onProviderDataReceived(byte[] data) {
