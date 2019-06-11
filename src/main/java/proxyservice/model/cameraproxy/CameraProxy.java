@@ -6,8 +6,14 @@ import proxyservice.model.cameradata.CameraDataConsumerEventListener;
 import proxyservice.model.cameradata.CameraDataProvider;
 import proxyservice.model.cameradata.CameraDataProviderEventListener;
 import proxyservice.model.messages.Message;
+import proxyservice.model.messages.service.PushChannelSettingsMessage;
 import proxyservice.model.messages.service.PushChannelUriMessage;
+import proxyservice.model.messages.service.PushNotificationContentMessage;
 import proxyservice.model.messages.standard.StandardMessage;
+import proxyservice.utilities.Utilities;
+import proxyservice.utilities.http.content.FormUrlEncodedContent;
+import proxyservice.utilities.http.HttpClient;
+import proxyservice.utilities.http.content.XmlContent;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -19,6 +25,7 @@ import java.util.Map;
 public class CameraProxy implements CameraDataProviderEventListener, CameraDataConsumerEventListener {
     private CameraDataProvider provider;
     private Map<Integer, CameraDataConsumer> consumers = new HashMap<Integer, CameraDataConsumer>();
+    private PushChannelSettingsMessage pushChannelSettings;
     private List<String> pushChannels = new ArrayList<String>();
 
     public synchronized void setProvider(CameraDataProvider provider) {
@@ -60,9 +67,53 @@ public class CameraProxy implements CameraDataProviderEventListener, CameraDataC
             } else if (consumers.containsKey(consumerId)) {
                 consumers.get(consumerId).send(data);
             }
+        } else if (message instanceof PushChannelSettingsMessage) {
+            PushChannelSettingsMessage pushChannelSettingsMessage = (PushChannelSettingsMessage)message;
+            pushChannelSettings = pushChannelSettingsMessage;
+            App.logger.log("PushChannelSettingsMessage", "ClientId: " + pushChannelSettings.getClientId() + ", ClientSecret: " + pushChannelSettings.getClientSecret());
+        } else if (message instanceof PushNotificationContentMessage) {
+            PushNotificationContentMessage pushNotificationContentMessage = (PushNotificationContentMessage)message;
+            String accessToken = tryGetAccessToken();
+            if (accessToken != null) {
+                sendNotification(accessToken, pushNotificationContentMessage.getContent());
+            }
         } else {
             for (CameraDataConsumer consumer : consumers.values()) {
                 consumer.send(data);
+            }
+        }
+    }
+
+    private String tryGetAccessToken() {
+        if (pushChannelSettings == null) {
+            return null;
+        }
+
+        FormUrlEncodedContent content = new FormUrlEncodedContent();
+        content.add("grant_type", "client_credentials");
+        content.add("client_id", pushChannelSettings.getClientId());
+        content.add("client_secret", pushChannelSettings.getClientSecret());
+        content.add("scope", "notify.windows.com");
+
+        HttpClient httpClient = new HttpClient();
+        String responseString = httpClient.post("https://login.live.com/accesstoken.srf", content);
+        String accessToken = Utilities.substringBetween(responseString, "access_token\":\"", "\"");
+        App.logger.log("Push Notification Authentication", responseString);
+        return accessToken;
+    }
+
+    private void sendNotification(String accessToken, String content) {
+        XmlContent toast = new XmlContent(content);
+        for (String pushChannel : pushChannels) {
+            try {
+                HttpClient httpClient = new HttpClient();
+                httpClient.addHeader("Authorization", "Bearer " + accessToken);
+                httpClient.addHeader("X-WNS-Type", "wns/toast");
+                httpClient.addHeader("X-WNS-Cache-Policy", "no-cache");
+                httpClient.addHeader("X-WNS-TTL", "60"); //60 seconds
+                httpClient.post(pushChannel, toast);
+            } catch (Exception exception) {
+                exception.printStackTrace();
             }
         }
     }

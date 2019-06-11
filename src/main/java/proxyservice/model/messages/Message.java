@@ -1,6 +1,9 @@
 package proxyservice.model.messages;
 
+import proxyservice.App;
+import proxyservice.model.messages.service.PushChannelSettingsMessage;
 import proxyservice.model.messages.service.PushChannelUriMessage;
+import proxyservice.model.messages.service.PushNotificationContentMessage;
 import proxyservice.model.messages.service.ServiceMessageId;
 import proxyservice.model.messages.standard.StandardMessage;
 
@@ -34,6 +37,13 @@ public class Message {
                 String previousUri = getString(dataBuffer);
                 String uri = getString(dataBuffer);
                 return new PushChannelUriMessage(previousUri, uri);
+            } else if (messageId == ServiceMessageId.PushChannelSettings) {
+                String clientId = getString(dataBuffer);
+                String clientSecret = getString(dataBuffer);
+                return new PushChannelSettingsMessage(clientId, clientSecret);
+            } else if (messageId == ServiceMessageId.PushNotification) {
+                String content = getString(dataBuffer);
+                return new PushNotificationContentMessage(content);
             } else {
                 return null;
             }
