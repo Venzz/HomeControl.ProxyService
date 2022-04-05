@@ -13,6 +13,9 @@ public class App {
     public static Logger logger = new Logger();
 
     public static void main(String[] args) throws Exception {
+        logger.log("Free memory (bytes)", String.valueOf(Runtime.getRuntime().freeMemory()));
+        logger.log("Maximum memory (bytes)", String.valueOf(Runtime.getRuntime().maxMemory()));
+
         Server server = new Server(Integer.valueOf(System.getenv("PORT")));
         ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
         context.setContextPath("/");

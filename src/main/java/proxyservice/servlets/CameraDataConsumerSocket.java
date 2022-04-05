@@ -13,6 +13,7 @@ import java.nio.ByteBuffer;
 public class CameraDataConsumerSocket extends WebSocketAdapter implements CameraDataConsumer {
     private int id = Id.getNext();
     private CameraDataConsumerEventListener eventListener;
+    private boolean messagesBufferSent;
 
     public CameraDataConsumerSocket() {
         App.model.cameraProxy.addConsumer(this);
@@ -21,6 +22,16 @@ public class CameraDataConsumerSocket extends WebSocketAdapter implements Camera
 
     public int getId() {
         return id;
+    }
+
+    @Override
+    public boolean isMessagesBufferSent() {
+        return messagesBufferSent;
+    }
+
+    @Override
+    public void notifyMessagesBufferSent() {
+        messagesBufferSent = true;
     }
 
     public synchronized void setEventListener(CameraDataConsumerEventListener eventListener) {

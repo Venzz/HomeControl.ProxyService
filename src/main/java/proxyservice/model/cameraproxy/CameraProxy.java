@@ -1,5 +1,6 @@
 package proxyservice.model.cameraproxy;
 
+import com.google.common.collect.EvictingQueue;
 import proxyservice.App;
 import proxyservice.model.cameradata.CameraDataConsumer;
 import proxyservice.model.cameradata.CameraDataConsumerEventListener;
@@ -9,6 +10,7 @@ import proxyservice.model.messages.Message;
 import proxyservice.model.messages.service.PushChannelSettingsMessage;
 import proxyservice.model.messages.service.PushChannelUriMessage;
 import proxyservice.model.messages.service.PushNotificationContentMessage;
+import proxyservice.model.messages.standard.LiveMediaDataWithBufferMessage;
 import proxyservice.model.messages.standard.StandardMessage;
 import proxyservice.utilities.Utilities;
 import proxyservice.utilities.http.content.FormUrlEncodedContent;
@@ -17,16 +19,14 @@ import proxyservice.utilities.http.content.XmlContent;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class CameraProxy implements CameraDataProviderEventListener, CameraDataConsumerEventListener {
     private CameraDataProvider provider;
     private Map<Integer, CameraDataConsumer> consumers = new HashMap<Integer, CameraDataConsumer>();
     private PushChannelSettingsMessage pushChannelSettings;
     private List<String> pushChannels = new ArrayList<String>();
+    private Queue<byte[]> messagesBuffer = EvictingQueue.create(500);
 
     public synchronized void setProvider(CameraDataProvider provider) {
         this.provider = provider;
@@ -59,13 +59,25 @@ public class CameraProxy implements CameraDataProviderEventListener, CameraDataC
         Message message = Message.tryCreate(data);
         if (message instanceof StandardMessage) {
             StandardMessage standardMessage = (StandardMessage)message;
+            messagesBuffer.add(data);
+
             int consumerId = standardMessage.getConsumerId();
             if (consumerId == 0) {
                 for (CameraDataConsumer consumer : consumers.values()) {
-                    consumer.send(data);
+                    if (consumer.isMessagesBufferSent()) {
+                        consumer.send(data);
+                    } else {
+                        consumer.send(LiveMediaDataWithBufferMessage.getData(0, data, messagesBuffer));
+                        consumer.notifyMessagesBufferSent();
+                    }
                 }
             } else if (consumers.containsKey(consumerId)) {
-                consumers.get(consumerId).send(data);
+                if (consumers.get(consumerId).isMessagesBufferSent()) {
+                    consumers.get(consumerId).send(data);
+                } else {
+                    consumers.get(consumerId).send(LiveMediaDataWithBufferMessage.getData(0, data, messagesBuffer));
+                    consumers.get(consumerId).notifyMessagesBufferSent();
+                }
             }
         } else if (message instanceof PushChannelSettingsMessage) {
             PushChannelSettingsMessage pushChannelSettingsMessage = (PushChannelSettingsMessage)message;

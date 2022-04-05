@@ -1,6 +1,5 @@
 package proxyservice.model.messages;
 
-import proxyservice.App;
 import proxyservice.model.messages.service.PushChannelSettingsMessage;
 import proxyservice.model.messages.service.PushChannelUriMessage;
 import proxyservice.model.messages.service.PushNotificationContentMessage;
